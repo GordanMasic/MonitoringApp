@@ -1,0 +1,136 @@
+package server;
+
+import gui.Window;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+
+public class Server {
+
+	// Declaring variables
+	private static ServerSocket server;
+	private static Socket socket;
+	private static ArrayList<Socket> clientList;
+	private static ArrayList<String> clientIpAdressList;
+	private static String message;
+	private static Window window;
+
+	public static void startServer() {
+		try {
+			// Initializing lists
+			clientIpAdressList = new ArrayList<String>();
+			clientList = new ArrayList<Socket>();
+
+			// Initializing server socket
+			server = new ServerSocket(8000);
+
+			// Creating interface window
+			window = new Window();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	/**
+	 * Thread for assigning client and gathering his ip address and reading
+	 * message from client.
+	 */
+	private static class Task extends Thread {
+
+		private Socket client;
+
+		public Task(Socket socket) {
+			client = socket;
+		}
+
+		@Override
+		public void run() {
+			String ip = client.getInetAddress().getHostAddress();
+			clientIpAdressList.add(ip);
+			clientList.add(client);
+			message = readMessage();
+
+		}
+	}
+
+	/**
+	 * Method for getting client list.
+	 * 
+	 * @return array list that contains client sockets.
+	 */
+	public static ArrayList<Socket> getListOfClients() {
+		return clientList;
+	}
+
+	/**
+	 * Method for getting list of ip addresses
+	 * 
+	 * @return array list that contains client ip addresses
+	 */
+	public static ArrayList<String> getListOfIpAddresses() {
+		return clientIpAdressList;
+	}
+
+	/**
+	 * Connects client to the server
+	 */
+	public static void connectClient() {
+		try {
+			socket = server.accept();
+			Task task = new Task(socket);
+			task.start();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Searches for certain ip address in list
+	 * 
+	 * @param ipAdress
+	 *            String that contains ip address
+	 * @return index of ip address from list
+	 */
+	public static int searchIpAdress(String ipAdress) {
+		return clientIpAdressList.indexOf(ipAdress);
+	}
+
+	public static String readMessage() {
+		String message = "";
+		try {
+			BufferedReader readMessage = new BufferedReader(
+					new InputStreamReader(socket.getInputStream()));
+			message = readMessage.readLine();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return message;
+	}
+
+	public static String readInfo() {
+		String info = "";
+		try {
+			BufferedReader readMessage = new BufferedReader(
+					new InputStreamReader(socket.getInputStream()));
+			while (readMessage.ready()) {
+				info += readMessage.readLine();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return info;
+	}
+
+	public static String getMessage() {
+		return message;
+	}
+
+	public static Window getWindow() {
+		return window;
+	}
+}

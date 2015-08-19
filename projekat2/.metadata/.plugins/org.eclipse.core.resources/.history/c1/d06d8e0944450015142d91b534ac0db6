@@ -1,0 +1,215 @@
+package gui;
+
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.Socket;
+
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+
+import server.Server;
+
+public class ButtonPanel extends JPanel {
+
+	private static final long serialVersionUID = -1869535166207654639L;
+
+	// Declaring variables
+	private JButton shutDown;
+	private JButton systeminfo;
+	private JButton applications;
+	private JButton openBrowser;
+	private static String message;
+	private static Socket client;
+
+	public ButtonPanel() {
+
+		// Initializing buttons
+		shutDown = new JButton("Shut Down");
+		systeminfo = new JButton("System Info");
+		applications = new JButton("Active Apps");
+		openBrowser = new JButton("Open browser");
+
+		// Adding button listener to buttons
+		shutDown.addActionListener(new ButtonListener());
+		systeminfo.addActionListener(new ButtonListener());
+		applications.addActionListener(new ButtonListener());
+		openBrowser.addActionListener(new ButtonListener());
+
+		// Setting size of buttons
+		shutDown.setPreferredSize(new Dimension(150, 30));
+		systeminfo.setPreferredSize(new Dimension(150, 30));
+		applications.setPreferredSize(new Dimension(150, 30));
+		openBrowser.setPreferredSize(new Dimension(150, 30));
+
+		// Adding buttons to the panel
+		add(shutDown);
+		add(applications);
+		add(openBrowser);
+		add(systeminfo);
+
+		// Setting size of the panel
+		setPreferredSize(new Dimension(200, 200));
+	}
+
+	/**
+	 * BuuttonListener for gathering informations from client.
+	 */
+	private class ButtonListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			if (e.getSource() == shutDown) {
+				try {
+					shutDown();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			} else if (e.getSource() == applications) {
+				try {
+					applications();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				Task t = new Task();
+				t.start();
+			} else if (e.getSource() == openBrowser) {
+				try {
+					openBrowser();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			} else if (e.getSource() == systeminfo) {
+				try {
+					systemInfo();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				Task t = new Task();
+				t.start();
+			}
+		}
+
+	}
+
+	/**
+	 * Method for sending message to client. Thanks to this message client
+	 * returns system informations to server.
+	 * 
+	 * @throws IOException
+	 */
+	static void systemInfo() throws IOException {
+		try {
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+					client.getOutputStream()));
+			writer.write("System Info");
+			writer.newLine();
+			writer.flush();
+		} catch (NullPointerException e) {
+
+		}
+	}
+
+	/**
+	 * Method for sending message to client. Thanks to this message client's PC
+	 * will turn off.
+	 * 
+	 * @throws IOException
+	 */
+	private static void shutDown() throws IOException {
+		try {
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+					client.getOutputStream()));
+			writer.write("Shut Down");
+			writer.newLine();
+			writer.flush();
+		} catch (NullPointerException e) {
+
+		}
+	}
+
+	/**
+	 * Method for sending message to client. Thanks to this message client
+	 * returns to server informations about active applications on his PC.
+	 * 
+	 * @throws IOException
+	 */
+	private static void applications() throws IOException {
+		try {
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+					client.getOutputStream()));
+			writer.write("Applications");
+			writer.newLine();
+			writer.flush();
+		} catch (NullPointerException e) {
+
+		}
+	}
+
+	/**
+	 * Method for sending message to client. Thanks to this message on client's
+	 * PC will open browser with at www.google.com.
+	 * 
+	 * @throws IOException
+	 */
+	private static void openBrowser() throws IOException {
+		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+				client.getOutputStream()));
+		writer.write("Open Browser");
+		writer.newLine();
+		writer.flush();
+	}
+
+	public static void chooseClient(Socket socket) {
+		client = socket;
+	}
+
+	private static class Task extends Thread {
+		@Override
+		public void run() {
+			try {
+				Thread.sleep(500);
+				action();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public synchronized static void action() {
+		message = Server.getMessage();
+		if (message != null) {
+			JDialog dialog = new JDialog();
+			dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+			JTextArea textArea = new JTextArea();
+			textArea.setFont(new Font("TimesNewRoman", Font.PLAIN, 15));
+			try {
+				BufferedReader reader = new BufferedReader(
+						new InputStreamReader(client.getInputStream()));
+				while (reader.ready()) {
+					textArea.append(reader.readLine());
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			textArea.setLineWrap(false);
+			textArea.setEditable(false);
+			dialog.add(textArea);
+			dialog.setSize(600, 600);
+			dialog.setLocationRelativeTo(null);
+			dialog.setVisible(true);
+
+		}
+
+	}
+}

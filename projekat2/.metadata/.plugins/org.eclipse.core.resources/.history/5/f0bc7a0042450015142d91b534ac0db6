@@ -1,0 +1,48 @@
+package gui;
+
+import java.awt.BorderLayout;
+import java.awt.Font;
+import java.util.ArrayList;
+
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+
+import server.Server;
+
+public class ClientListPanel extends JPanel {
+
+	private static final long serialVersionUID = -1151382542037019676L;
+
+	private static JTextArea area;
+	private static ArrayList<String> ipAddressList;
+	private static int counter;
+
+	public ClientListPanel() {
+		setLayout(new BorderLayout());
+		setBorder(BorderFactory.createTitledBorder("Client list"));
+		setSize(200, 600);
+		area = new JTextArea();
+		area.setText("                         	   ");
+		add(area);
+		area.setFont(new Font("TimesNewRoman", Font.BOLD, 12));
+		area.setEditable(false);
+		area.setSize(100, 300);
+
+	}
+
+	public synchronized void addClients() {
+
+		ipAddressList = Server.getListOfIpAddresses();
+
+		area.setText("");
+
+		counter = 0;
+		for (int i = 0; i < ipAddressList.size(); i++) {
+			area.append("Client" + (++counter) + " : " + ipAddressList.get(i)
+					+ "\t\n");
+		}
+		area.repaint();
+
+	}
+}

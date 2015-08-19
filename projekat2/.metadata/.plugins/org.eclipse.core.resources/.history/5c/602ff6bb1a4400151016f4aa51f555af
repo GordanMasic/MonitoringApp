@@ -1,0 +1,70 @@
+package gui;
+
+import java.awt.BorderLayout;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+import server.Server;
+
+public class Window extends JFrame {
+
+	private static final long serialVersionUID = 7446192599263749847L;
+
+	private static final int WIDTH = 500;
+	private static final int HEIGHT = 300;
+	private static ClientListPanel clientListPanel;
+	private static ChooseClientPanel chooseClientPanel;
+	private static ButtonPanel buttonsPanel;
+	private JPanel panel;
+
+	public Window() {
+
+		Task task = new Task();
+		task.start();
+		setLayout(new BorderLayout());
+
+		panel = new JPanel();
+		panel.setLayout(new BorderLayout());
+		panel.setSize(600, 600);
+
+		chooseClientPanel = new ChooseClientPanel();
+		panel.add(chooseClientPanel, BorderLayout.SOUTH);
+		add(panel, BorderLayout.CENTER);
+		clientListPanel = new ClientListPanel();
+		add(clientListPanel, BorderLayout.WEST);
+
+		buttonsPanel = new ButtonPanel();
+		panel.add(buttonsPanel, BorderLayout.NORTH);
+
+		setTitle("Monitoring Application");
+		setSize(WIDTH, HEIGHT);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setLocationRelativeTo(null);
+		setVisible(true);
+
+	}
+
+	public void addClients() {
+		clientListPanel.addClients();
+		clientListPanel.repaint();
+	}
+
+	public static void main(String[] args) {
+		Window window = new Window();
+
+		while (true) {
+			Server.connectClient();
+			window.addClients();
+		}
+	}
+
+	private class Task extends Thread {
+
+		@Override
+		public void run() {
+
+			Server.startServer();
+		}
+	}
+}

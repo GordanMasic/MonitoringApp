@@ -1,0 +1,105 @@
+package server;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+
+public class Server {
+
+	private static ServerSocket server;
+	private static Socket socket;
+	private static ArrayList<Socket> clientList;
+	private static ArrayList<String> clientIpAdressList;
+	private static String message;
+	private static String info;
+
+	public static void startServer() {
+
+		try {
+			clientIpAdressList = new ArrayList<String>();
+			clientList = new ArrayList<Socket>();
+			server = new ServerSocket(8000);
+			connectClient();
+
+			Task task = new Task(socket);
+			task.start();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static class Task extends Thread {
+
+		private Socket client;
+
+		public Task(Socket socket) {
+			client = socket;
+		}
+
+		@Override
+		public void run() {
+			String ip = client.getInetAddress().getHostAddress();
+			clientIpAdressList.add(ip);
+			clientList.add(client);
+			message = readMessage();
+			info = readInfo();
+		}
+	}
+
+	public static ArrayList<Socket> getListOfClients() {
+		return clientList;
+	}
+
+	public static ArrayList<String> getListOfIpAdresses() {
+		return clientIpAdressList;
+	}
+
+	public static void connectClient() {
+		try {
+			socket = server.accept();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static int searchIpAdress(String ipAdress) {
+		return clientIpAdressList.indexOf(ipAdress);
+	}
+
+	public static String readMessage() {
+		String message = "";
+		try {
+			BufferedReader readMessage = new BufferedReader(
+					new InputStreamReader(socket.getInputStream()));
+			message = readMessage.readLine();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return message;
+	}
+
+	public static String readInfo() {
+		String info = "";
+		try {
+			BufferedReader readMessage = new BufferedReader(
+					new InputStreamReader(socket.getInputStream()));
+			while (readMessage.ready()) {
+				info += readMessage.readLine() + "\n";
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return info;
+	}
+
+	public static String getMessage() {
+		return message;
+	}
+
+	public static String getInfo() {
+		return info;
+	}
+}

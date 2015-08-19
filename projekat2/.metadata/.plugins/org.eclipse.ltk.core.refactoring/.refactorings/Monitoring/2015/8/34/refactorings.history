@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename type &apos;gui.ButtonPanel.Task&apos; to &apos;Task1&apos;&#x0D;&#x0A;- Original project: &apos;Monitoring&apos;&#x0D;&#x0A;- Original element: &apos;gui.ButtonPanel.Task&apos;&#x0D;&#x0A;- Renamed element: &apos;gui.ButtonPanel.Task1&apos;&#x0D;&#x0A;- Update references to refactored element&#x0D;&#x0A;- Update textual occurrences in comments and strings" description="Rename type &apos;Task&apos;" flags="589826" id="org.eclipse.jdt.ui.rename.type" input="/src&lt;gui{ButtonPanel.java[ButtonPanel[Task" matchStrategy="1" name="Task1" qualified="false" references="true" similarDeclarations="false" stamp="1439853786966" textual="false" version="1.0"/>
+</session>

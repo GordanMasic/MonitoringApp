@@ -1,0 +1,151 @@
+package client;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
+
+public class Client {
+
+	private static final String OS_NAME = "os.name";
+	private static final String JAVA_VERSION = "java.version";
+	private static final String USER_NAME = "user.name";
+
+	private static Socket socket;
+	private static String message;
+	private static BufferedReader readMessage;
+
+	private static String ipAdress;
+	private static String operatingSystemName;
+	private static String javaVersion;
+	private static String userName;
+	private static Integer availableProcessors;
+
+	public static void main(String[] args) {
+
+		try {
+			socket = new Socket("localhost", 8000);
+			ipAdress = socket.getInetAddress().getHostAddress();
+			operatingSystemName = System.getProperty(OS_NAME);
+			javaVersion = System.getProperty(JAVA_VERSION);
+			userName = System.getProperty(USER_NAME);
+			availableProcessors = Runtime.getRuntime().availableProcessors();
+
+			Task2 t = new Task2();
+			t.start();
+
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static class Task2 extends Thread {
+		@Override
+		public void run() {
+			try {
+				readMessage();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private static void readMessage() throws IOException {
+		readMessage = new BufferedReader(new InputStreamReader(
+				socket.getInputStream()));
+		while (true) {
+			message = "";
+			message = readMessage.readLine();
+
+			if (message != null) {
+				if (message.equals("System Info")) {
+					sendSystemInfo();
+				} else if (message.equals("Shut Down")) {
+					shutDown();
+				} else if (message.equals("Applications")) {
+					sendApps();
+				}
+			}
+		}
+	}
+
+	private synchronized static void sendApps() {
+		String activAppsCommand = "";
+		String activApps = "";
+		try {
+			String osName = System.getProperty("os.name");
+
+			String os = osName + " | " + System.getProperty("os.version")
+					+ " | " + System.getProperty("os.arch");
+			if (osName.contains("Windows")) {
+				activAppsCommand = "tasklist.exe";
+			} else {
+				activAppsCommand = "ps -e";
+			}
+
+			Process p = Runtime.getRuntime().exec(activAppsCommand);
+			BufferedReader input = new BufferedReader(new InputStreamReader(
+					p.getInputStream()));
+
+			String line;
+			while ((line = input.readLine()) != null) {
+				activApps += line + "\n";
+			}
+
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+					socket.getOutputStream()));
+			writer.write("Applications");
+			writer.newLine();
+			writer.flush();
+			writer.write(activApps);
+			writer.newLine();
+			writer.flush();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private synchronized static void sendSystemInfo() {
+
+
+		BufferedWriter writer = null;
+		try {
+			writer = new BufferedWriter(new OutputStreamWriter(
+					socket.getOutputStream()));
+
+			String systemInfo = String
+					.format("IP: %s\nOS: %s\nJAVA_Version: %s\nUser_Name: %s\nAvailable_Processors: %s",
+							ipAdress, operatingSystemName, javaVersion,
+							userName, availableProcessors);
+
+			writer.write("System Info");
+			writer.newLine();
+			writer.flush();
+			writer.write(systemInfo);
+			writer.newLine();
+			writer.flush();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private static void shutDown() {
+		Runtime r = Runtime.getRuntime();
+		try {
+			r.exec("shutdown -s -t 0");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.exit(0);
+
+	}
+
+}

@@ -1,0 +1,30 @@
+package gui;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.util.ArrayList;
+
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
+import server.Server;
+
+public class ChooseClientPanel extends JPanel {
+
+	private static final long serialVersionUID = -5504607050243272566L;
+
+	private JTextField field;
+	private ArrayList<String> ipAdressList;
+
+	public ChooseClientPanel() {
+
+		ipAdressList = Server.getListOfIpAdresses();
+		field = new JTextField();
+		field.setBorder(BorderFactory.createTitledBorder("Choose client"));
+		field.setPreferredSize(new Dimension(200, 50));
+		setSize(200, 300);
+		add(field);
+
+	}
+}
